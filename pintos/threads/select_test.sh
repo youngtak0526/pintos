@@ -17,7 +17,6 @@ if [[ "$MODE" != "-q" && "$MODE" != "-g" ]]; then
   exit 1
 fi
 
-# 두 번째 인자가 있으면 -r 체크
 REBUILD=0
 if (( $# == 2 )); then
   if [[ "$2" == "-r" ]]; then
