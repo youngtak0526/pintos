@@ -230,14 +230,7 @@ thread_block (void) {
 	schedule ();
 }
 
-/* Transitions a blocked thread T to the ready-to-run state.
-   This is an error if T is not blocked.  (Use thread_yield() to
-   make the running thread ready.)
 
-   This function does not preempt the running thread.  This can
-   be important: if the caller had disabled interrupts itself,
-   it may expect that it can atomically unblock a thread and
-   update other data. */
 bool list_b (const struct list_elem *a, const struct list_elem *b, void* aux)
 {
 	struct thread* t1 = list_entry(a, struct thread, elem);
