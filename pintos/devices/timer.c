@@ -17,6 +17,8 @@
 #error TIMER_FREQ <= 1000 recommended
 #endif
 
+// 슬립 리스트 추가 == 자냐? 안자냐? 확인 용도
+static struct list sleep_list;
 /* Number of timer ticks since OS booted. */
 static int64_t ticks;
 
@@ -37,6 +39,8 @@ timer_init (void) {
 	/* 8254 input frequency divided by TIMER_FREQ, rounded to
 	   nearest. */
 	uint16_t count = (1193180 + TIMER_FREQ / 2) / TIMER_FREQ;
+	// 초기화 INIT이 도는 순간에! 나도껴줘~ 약간 이런느낌
+	 list_init(&sleep_list);
 
 	outb (0x43, 0x34);    /* CW: counter 0, LSB then MSB, mode 2, binary. */
 	outb (0x40, count & 0xff);
@@ -90,11 +94,18 @@ timer_elapsed (int64_t then) {
 /* Suspends execution for approximately TICKS timer ticks. */
 void
 timer_sleep (int64_t ticks) {
-	int64_t start = timer_ticks ();
-	  if (ticks <= 0)
+	 if (ticks <= 0) // 0 이하 입력이면 아무 일 하지 않음(즉시 반환).
+	  	return;
 	ASSERT (intr_get_level () == INTR_ON);
-	while (timer_elapsed (start) < ticks)
-		thread_yield ();
+	struct thread *cur = thread_current (); 
+	
+	enum intr_level old_level = intr_disable (); // 인터럽트 효과 안받게 하기 (쓰레드가 인터럽트에서 영향없게)
+	int64_t start = timer_ticks (); // 현재 시점의 타이머 틱을 읽음.
+    cur->wake_tick = start + ticks;
+	
+	list_insert_ordered(&sleep_list, &cur->elem, wake_tick_less, NULL); // sleep_list에 wake_tick 오름차순으로 삽입.
+	thread_block ();
+	intr_set_level (old_level);
 }
 
 /* Suspends execution for approximately MS milliseconds. */
@@ -122,10 +133,21 @@ timer_print_stats (void) {
 }
 
 /* Timer interrupt handler. */
-static void
+void
 timer_interrupt (struct intr_frame *args UNUSED) {
-	ticks++;
-	thread_tick ();
+    ticks++;
+    thread_tick ();
+
+    /* wake up threads whose wake_tick <= ticks */
+    while (!list_empty(&sleep_list)) {
+        struct list_elem *e = list_front(&sleep_list);
+        struct thread *t = list_entry(e, struct thread, elem);
+        if (t->wake_tick > ticks)
+            break; /* front thread not ready yet (list ordered), done */
+
+        list_pop_front(&sleep_list);
+        thread_unblock(t);
+    }
 }
 
 /* Returns true if LOOPS iterations waits for more than one timer
@@ -145,6 +167,16 @@ too_many_loops (unsigned loops) {
 	barrier ();
 	return start != ticks;
 }
+// 일단 검사 용도암 우선순위 + 정렬 규칙 만들예정! 이미 정렬함수가 있다는데용!
+static bool
+wake_tick_less (const struct list_elem *a, const struct list_elem *b, void *extra UNUSED)
+{
+	struct thread *ta = list_entry(a, struct thread, elem);
+	struct thread *tb = list_entry(b, struct thread, elem);
+	return ta->wake_tick < tb->wake_tick;
+
+}
+
 
 /* Iterates through a simple loop LOOPS times, for implementing
    brief delays.
@@ -153,14 +185,19 @@ too_many_loops (unsigned loops) {
    affect timings, so that if this function was inlined
    differently in different places the results would be difficult
    to predict. */
-static void NO_INLINE
-busy_wait (int64_t loops) {
-	while (loops-- > 0)
-		barrier ();
-}
+
+
+// busy_wait 사망시키고 대채제 투입 ㄱㄱ
+// static void NO_INLINE
+// busy_wait (int64_t loops) {
+// 	while (loops-- > 0)
+// 		barrier ();
+// }
+static void
+
 
 /* Sleep for approximately NUM/DENOM seconds. */
-static void
+
 real_time_sleep (int64_t num, int32_t denom) {
 	/* Convert NUM/DENOM seconds into timer ticks, rounding down.
 

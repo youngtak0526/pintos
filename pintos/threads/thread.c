@@ -93,6 +93,17 @@ static uint64_t gdt[3] = { 0, 0x00af9a000000ffff, 0x00cf92000000ffff };
 
    It is not safe to call thread_current() until this function
    finishes. */
+// 쓰레드 비교 함수
+bool
+thread_cmp_priority (const struct list_elem *a,
+                     const struct list_elem *b,
+                     void *aux UNUSED)
+{
+  return list_entry (a, struct thread, elem)->priority >
+         list_entry (b, struct thread, elem)->priority;
+}
+
+//ㅇㄹㅇㄹㅇㄹㄴ
 void
 thread_init (void) {
 	ASSERT (intr_get_level () == INTR_OFF);
@@ -235,15 +246,12 @@ thread_block (void) {
    update other data. */
 void
 thread_unblock (struct thread *t) {
-	enum intr_level old_level;
-
 	ASSERT (is_thread (t));
 
-	old_level = intr_disable ();
-	ASSERT (t->status == THREAD_BLOCKED);
-	list_push_back (&ready_list, &t->elem);
+	enum intr_level old_levle = intr_disable ();
+	list_insert_ordered(&ready_list, &t->elem, thread_cmp_priority, NULL);
 	t->status = THREAD_READY;
-	intr_set_level (old_level);
+	intr_set_level (old_levle);
 }
 
 /* Returns the name of the running thread. */
