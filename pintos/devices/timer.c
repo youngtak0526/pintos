@@ -7,6 +7,7 @@
 #include "threads/io.h"
 #include "threads/synch.h"
 #include "threads/thread.h"
+#include "list.h"
 
 /* See [8254] for hardware details of the 8254 timer chip. */
 
@@ -87,14 +88,30 @@ timer_elapsed (int64_t then) {
 	return timer_ticks () - then;
 }
 
+bool list_less (const struct list_elem* a,const struct list_elem* b,void* aux)
+{
+	struct thread *f1 = list_entry(a, struct thread, elem);
+	struct thread *f2 = list_entry(b, struct thread, elem);
+	if (f1->wake_tick < f2->wake_tick)
+		return true;
+	return false;
+}
+
 /* Suspends execution for approximately TICKS timer ticks. */
 void
-timer_sleep (int64_t ticks) {
+timer_sleep (int64_t ticks) { // alarm clock 알람시계 설정해두는 미래시간 설정하는거야
+	if (ticks <= 0)
+		return;
+		
 	int64_t start = timer_ticks ();
-	  if (ticks <= 0)
 	ASSERT (intr_get_level () == INTR_ON);
-	while (timer_elapsed (start) < ticks)
-		thread_yield ();
+	enum intr_level old_level;
+	old_level = intr_disable();
+	thread_current()->wake_tick = start + ticks;
+	list_insert_ordered(getwaitlist(), &(thread_current()->elem), list_less, NULL);
+	thread_block();
+	intr_set_level(old_level);
+	
 }
 
 /* Suspends execution for approximately MS milliseconds. */
@@ -102,6 +119,7 @@ void
 timer_msleep (int64_t ms) {
 	real_time_sleep (ms, 1000);
 }
+
 
 /* Suspends execution for approximately US microseconds. */
 void
@@ -126,6 +144,16 @@ static void
 timer_interrupt (struct intr_frame *args UNUSED) {
 	ticks++;
 	thread_tick ();
+	struct list_elem* e;
+	for (e = list_begin(getwaitlist()); e != list_end(getwaitlist());)
+	{
+		struct thread* t = list_entry(e, struct thread, elem);
+		if (t->wake_tick > ticks)
+			break;
+		struct list_elem* temp;
+		e = list_remove(e);
+		thread_unblock(t);
+	}
 }
 
 /* Returns true if LOOPS iterations waits for more than one timer

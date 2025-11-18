@@ -32,7 +32,7 @@ struct gp_registers {
 	uint64_t rcx;
 	uint64_t rbx;
 	uint64_t rax;
-} __attribute__((packed));
+} __attribute__((packed)); //__attribute__ ((속성명))packed는 패딩을 없애달라는 의미
 
 struct intr_frame {
 	/* Pushed by intr_entry in intr-stubs.S.

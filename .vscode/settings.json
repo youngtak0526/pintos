@@ -1,0 +1,10 @@
+{
+    "files.associations": {
+        "list.h": "c",
+        "io.h": "c",
+        "thread.h": "c",
+        "list": "c",
+        "bit": "c",
+        "synch.h": "c"
+    }
+}
