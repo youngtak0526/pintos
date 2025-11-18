@@ -10,8 +10,6 @@ struct semaphore {
 	unsigned value;             /* Current value. */
 	//대기하는 스레드의 리스트 
 	struct list waiters;        /* List of waiting threads. */
-	//들어와있는 스레드
-	struct list threads;
 };
 
 void sema_init (struct semaphore *, unsigned value);
