@@ -19,7 +19,6 @@ bool sema_try_down (struct semaphore *);
 //V
 void sema_up (struct semaphore *);
 void sema_self_test (void);
-
 /* Lock. */
 struct lock {
 	//이건 그냥 디버깅용 변수인듯

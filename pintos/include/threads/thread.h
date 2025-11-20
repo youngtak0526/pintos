@@ -9,7 +9,6 @@
 #include "vm/vm.h"
 #endif
 
-
 /* States in a thread's life cycle. */
 enum thread_status {
 	THREAD_RUNNING,     /* Running thread. */
@@ -91,14 +90,14 @@ struct thread {
 	enum thread_status status;          /* Thread state. */
 	char name[16];                      /* Name (for debugging purposes). */
 	int priority;                       /* Priority. */
-	int originpriority;
-	int64_t wake_tick;   				// 틱 확인해줘야하니까
-
+	int origin_priority;
+	int64_t waketime;
 	/* Shared between thread.c and synch.c. */
 	struct list_elem elem;              /* List element. */
- 	struct list donations;        /* 이 스레드에 기부된 쓰레드들 리스트 */
-    struct lock *waiting_lock;    /* 현재 이 스레드가 기다리고 있는 락 (없으면 NULL) */
-    struct list_elem donation_elem; /* donations 리스트에 들어갈 elem */
+	struct list_elem donation_elem;
+	struct list donation;
+	//어떤 락의 의해서 대기를 타고 있는지
+	struct lock* lock;
 #ifdef USERPROG
 	/* Owned by userprog/process.c. */
 	uint64_t *pml4;                     /* Page map level 4 */
@@ -146,10 +145,8 @@ int thread_get_recent_cpu (void);
 int thread_get_load_avg (void);
 
 void do_iret (struct intr_frame *tf);
-
-#endif /* threads/thread.h */;
-struct list* getwaitlist();
-
-struct list* getreadylist();
-
-void sort_readylist();
+void do_schedule(int status);
+struct list* getreadylist(void);
+struct list* getwaitlist(void);
+void sort_readylist(void);
+#endif /* threads/thread.h */

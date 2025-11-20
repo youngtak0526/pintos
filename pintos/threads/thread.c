@@ -24,7 +24,6 @@
    Do not modify this value. */
 #define THREAD_BASIC 0xd42df210
 
-
 /* List of processes in THREAD_READY state, that is, processes
    that are ready to run but not actually running. */
 struct list ready_list;
@@ -96,7 +95,7 @@ static uint64_t gdt[3] = { 0, 0x00af9a000000ffff, 0x00cf92000000ffff };
 void
 thread_init (void) {
 	ASSERT (intr_get_level () == INTR_OFF);
-	
+
 	/* Reload the temporal gdt for the kernel
 	 * This gdt does not include the user context.
 	 * The kernel will rebuild the gdt with user context, in gdt_init (). */
@@ -185,8 +184,8 @@ thread_create (const char *name, int priority,
 	tid_t tid;
 
 	ASSERT (function != NULL);
-
-	/* Allocate thread. */	
+	
+	/* Allocate thread. */
 	t = palloc_get_page (PAL_ZERO);
 	if (t == NULL)
 		return TID_ERROR;
@@ -213,16 +212,7 @@ thread_create (const char *name, int priority,
 	thread_yield();
 	return tid;
 }
-// 1 block / 2 While
-// /* 현재 스레드(cur)가 lock을 기다리고 있는 스레드(holder)에게 우선순위를 기부 */ 
-// void donate_priority(struct thread *holder) {
-//     struct thread *cur = thread_current();
-//     if (holder == NULL)
-//         return; // 아닐경우는 냅두고
 
-//     if (cur->priority > holder->priority)
-//         holder->priority = cur->priority; // 맞으면 우선순위 나가!!!!!!!
-// }
 /* Puts the current thread to sleep.  It will not be scheduled
    again until awoken by thread_unblock().
 
@@ -240,7 +230,14 @@ thread_block (void) {
 	schedule ();
 }
 
+/* Transitions a blocked thread T to the ready-to-run state.
+   This is an error if T is not blocked.  (Use thread_yield() to
+   make the running thread ready.)
 
+   This function does not preempt the running thread.  This can
+   be important: if the caller had disabled interrupts itself,
+   it may expect that it can atomically unblock a thread and
+   update other data. */
 bool list_b (const struct list_elem *a, const struct list_elem *b, void* aux)
 {
 	struct thread* t1 = list_entry(a, struct thread, elem);
@@ -329,8 +326,9 @@ thread_yield (void) {
 ]W_PRIORITY. */
 void
 thread_set_priority (int new_priority) {
-	thread_current()->priority = new_priority;
-	thread_current()->originpriority = new_priority;
+	if (list_empty(&thread_current()->donation))
+		thread_current()->priority = new_priority;
+	thread_current()->origin_priority = new_priority;
 	//리스트의 첫번째 요소의 우선순위와 현재 스레드의 우선순위를 비교,
 	//만약 현재 스레드의 우선순위가 낮다면 yield실행
 	if (list_entry(list_begin(&ready_list), struct thread, elem)->priority > new_priority)
@@ -431,12 +429,9 @@ init_thread (struct thread *t, const char *name, int priority) {
 	strlcpy (t->name, name, sizeof t->name);
 	t->tf.rsp = (uint64_t) t + PGSIZE - sizeof (void *);
 	t->priority = priority;
-	t->originpriority = priority;
+	t->origin_priority = priority;
 	t->magic = THREAD_MAGIC;
-
-	list_init(&t->donations);
-	t->waiting_lock = NULL;
-
+	list_init(&t->donation);
 }
 
 /* Chooses and returns the next thread to be scheduled.  Should
