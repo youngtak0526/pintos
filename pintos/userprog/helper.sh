@@ -7,6 +7,9 @@ if [ -z "$1" ]; then
 fi
 make
 cd build || { echo "build don't exist"; exit 1; }
-pintos-mkdisk filesys.dsk 2
+
+if [ ! -e filesys.dsk ]; then
+    pintos-mkdisk filesys.dsk 2
+fi
 pintos --fs-disk=filesys.dsk -- -f -q
 pintos --fs-disk=filesys.dsk -p tests/userprog/"$1" -- -q run "$1"
