@@ -302,7 +302,11 @@ lock_release (struct lock *lock) {
 		}
 	}
 	donate_priority_chain(t);
-	thread_yield();
+	// thread_yield();
+	if (!list_empty(getreadylist()) && thread_current()->priority < list_entry(list_begin(getreadylist()), struct thread, elem)->priority) {
+        thread_yield();
+    }
+	
 	intr_set_level(old);
 }
 

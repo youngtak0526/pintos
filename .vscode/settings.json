@@ -4,6 +4,7 @@
         "io.h": "c",
         "thread.h": "c",
         "list": "c",
-        "*.inc": "c"
+        "*.inc": "c",
+        "fsutil.h": "c"
     }
 }
