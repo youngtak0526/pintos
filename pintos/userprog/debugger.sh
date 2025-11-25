@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ -z "$1" ]; then
-    echo "Usage: ./helper.sh <program>"
+    echo "Usage: ./debugger.sh <copied-addrs>"
     exit 1
 fi
 
