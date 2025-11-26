@@ -5,9 +5,6 @@
         "thread.h": "c",
         "list": "c",
         "*.inc": "c",
-        "process.h": "c",
-        "stddef.h": "c",
-        "stdio.h": "c",
-        "synch.h": "c"
+        "fsutil.h": "c"
     }
 }
