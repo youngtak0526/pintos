@@ -105,11 +105,17 @@ fsutil_put (char **argv) {
 		PANIC ("%s: invalid file size %d", file_name, size);
 
 	/* Create destination file. */
-	if (!filesys_create (file_name, size))
-		PANIC ("%s: create failed", file_name);
-	dst = filesys_open (file_name);
+	char* name = strrchr(file_name, '/');
+	if (name == NULL)
+		name = file_name;
+	else
+		name++;
+	
+	if (!filesys_create (name, size))
+		PANIC ("%s: create failed", name);
+	dst = filesys_open (name);
 	if (dst == NULL)
-		PANIC ("%s: open failed", file_name);
+		PANIC ("%s: open failed", name);
 
 	/* Do copy. */
 	while (size > 0) {
