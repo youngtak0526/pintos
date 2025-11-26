@@ -131,7 +131,6 @@ dir_add (struct dir *dir, const char *name, disk_sector_t inode_sector) {
 
 	ASSERT (dir != NULL);
 	ASSERT (name != NULL);
-
 	/* Check NAME for validity. */
 	if (*name == '\0' || strlen (name) > NAME_MAX)
 		return false;
@@ -139,6 +138,7 @@ dir_add (struct dir *dir, const char *name, disk_sector_t inode_sector) {
 	/* Check that NAME is not in use. */
 	if (lookup (dir, name, NULL, NULL))
 		goto done;
+
 
 	/* Set OFS to offset of free slot.
 	 * If there are no free slots, then it will be set to the
@@ -157,6 +157,10 @@ dir_add (struct dir *dir, const char *name, disk_sector_t inode_sector) {
 	strlcpy (e.name, name, sizeof e.name);
 	e.inode_sector = inode_sector;
 	success = inode_write_at (dir->inode, &e, sizeof e, ofs) == sizeof e;
+	if (success)
+		printf("true\n");
+	else
+		printf("failed\n");
 
 done:
 	return success;
