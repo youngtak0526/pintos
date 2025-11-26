@@ -160,6 +160,11 @@ error:
 
 /* Switch the current execution context to the f_name.
  * Returns -1 on fail. */
+// 새 프로그램 생성될 때 마다 초기화 함
+// 그럼 새로 만들때 뭘 해야할까.
+// 지역을 쓰긴해야지 아무래도
+// 그럼 뭔 지역을 쓸건데
+// 음 그건 나도ㅓ 모르겠는데
 int
 process_exec (void *f_name) {
 	char *file_name = f_name;
@@ -168,11 +173,12 @@ process_exec (void *f_name) {
 	/* We cannot use the intr_frame in the thread structure.
 	 * This is because when current thread rescheduled,
 	 * it stores the execution information to the member. */
-	struct intr_frame _if;
-	_if.ds = _if.es = _if.ss = SEL_UDSEG;
-	_if.cs = SEL_UCSEG;
-	_if.eflags = FLAG_IF | FLAG_MBS;
-
+	// 완전히 새로운 유저 프로그램의 초기 레지스터 상태를 계속 계속 계속 만들어야함
+	struct intr_frame _if;   // 지역변수 스트럭쳐
+    _if.ds = _if.es = _if.ss = SEL_UDSEG;
+    _if.cs = SEL_UCSEG;
+    _if.eflags = FLAG_IF | FLAG_MBS;
+	
 	/* We first kill the current context */
 	process_cleanup ();
 

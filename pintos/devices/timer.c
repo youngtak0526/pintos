@@ -92,7 +92,7 @@ bool list_less (const struct list_elem* a,const struct list_elem* b,void* aux)
 {
 	struct thread *f1 = list_entry(a, struct thread, elem);
 	struct thread *f2 = list_entry(b, struct thread, elem);
-	if (f1->wake_tick < f2->wake_tick)
+	if (f1->waketime < f2->waketime)
 		return true;
 	return false;
 }
@@ -107,7 +107,7 @@ timer_sleep (int64_t ticks) { // alarm clock 알람시계 설정해두는 미래
 	ASSERT (intr_get_level () == INTR_ON);
 	enum intr_level old_level;
 	old_level = intr_disable();
-	thread_current()->wake_tick = start + ticks;
+	thread_current()->waketime = start + ticks;
 	list_insert_ordered(getwaitlist(), &(thread_current()->elem), list_less, NULL);
 	thread_block();
 	intr_set_level(old_level);
@@ -148,7 +148,7 @@ timer_interrupt (struct intr_frame *args UNUSED) {
 	for (e = list_begin(getwaitlist()); e != list_end(getwaitlist());)
 	{
 		struct thread* t = list_entry(e, struct thread, elem);
-		if (t->wake_tick > ticks)
+		if (t->waketime > ticks)
 			break;
 		struct list_elem* temp;
 		e = list_remove(e);

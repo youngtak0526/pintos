@@ -4,6 +4,10 @@
         "io.h": "c",
         "thread.h": "c",
         "list": "c",
-        "*.inc": "c"
+        "*.inc": "c",
+        "process.h": "c",
+        "stddef.h": "c",
+        "stdio.h": "c",
+        "synch.h": "c"
     }
 }

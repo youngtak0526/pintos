@@ -38,3 +38,4 @@ else
 		mv /tmp/${TAR_PATH} . && \
 		echo "Successfully archived. Submit '${TAR_PATH}'."
 endif
+
